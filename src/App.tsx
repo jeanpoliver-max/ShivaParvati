@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Heart, ShoppingBag, X, MapPin, Store, Leaf, ChefHat, Sparkles, ShieldCheck, Clock, Navigation } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Heart, ShoppingBag, X, MapPin, Store, Leaf, ChefHat, Sparkles, ShieldCheck, Clock, Navigation, Instagram } from 'lucide-react';
 import CategoryPage from './components/CategoryPage';
 import AdminPage from './components/AdminPage';
+import TermsPage from './components/TermsPage';
+import PrivacyPage from './components/PrivacyPage';
 import { getResellers, Reseller } from './services/resellers';
 import { getProducts, Product } from './services/products';
 import { getCategories, ProductCategory } from './services/categories';
@@ -40,7 +42,7 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [activeCategory, setActiveCategory] = useState<ProductCategory | null>(null);
-  const [viewState, setViewState] = useState<'home' | 'category' | 'admin'>('home');
+  const [viewState, setViewState] = useState<'home' | 'category' | 'admin' | 'terms' | 'privacy'>('home');
   const [favorites, setFavorites] = useState<{name: string, size: string}[]>([]);
   const [isFavOpen, setIsFavOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<'favorites' | 'locator'>('favorites');
@@ -298,6 +300,14 @@ export default function App() {
       return <AdminPage onBack={() => setViewState('home')} />;
     }
 
+    if (viewState === 'terms') {
+      return <TermsPage onBack={() => setViewState('home')} />;
+    }
+
+    if (viewState === 'privacy') {
+      return <PrivacyPage onBack={() => setViewState('home')} />;
+    }
+
     if (viewState === 'category' && activeCategory) {
       return (
         <>
@@ -529,6 +539,33 @@ export default function App() {
         </div>
       </section>
 
+      <section className="faq section-padding" id="faq" style={{ background: '#FFF' }}>
+        <div className="container">
+          <div className="text-center" style={{ marginBottom: '40px' }}>
+            <h2>Dúvidas Frequentes</h2>
+            <p>Tudo o que você precisa saber sobre nossos produtos e preparo</p>
+          </div>
+          <div className="faq-grid" style={{ maxWidth: '800px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <details className="faq-item">
+              <summary>Como preparo as massas e caldos congelados?</summary>
+              <p>Praticidade é o nosso forte! Nossas massas e caldos vão direto do freezer para o micro-ondas, forno ou panela, dependendo do produto. Cada embalagem contém instruções detalhadas de tempo e temperatura para garantir a melhor experiência em casa.</p>
+            </details>
+            <details className="faq-item">
+              <summary>Qual a validade dos produtos?</summary>
+              <p>Por serem ultracongelados e elaborados visando preservar o frescor e sabor, nossos produtos têm validade média de 3 a 6 meses se mantidos armazenados no freezer (-18°C). Verifique a etiqueta de cada embalagem.</p>
+            </details>
+            <details className="faq-item">
+              <summary>Vocês têm opções vegetarianas?</summary>
+              <p>Com certeza. Temos ótimas opções sem carne: queijos selecionados nas massas, pizzas clássicas, salgados artesanais e caldos, elaborados com carinho para quem aprecia refeições vegetarianas.</p>
+            </details>
+            <details className="faq-item">
+              <summary>Onde posso comprar Shiva Parvati?</summary>
+              <p>Você pode explorar nossa rede de parceiros comerciais clicando em "Onde Comprar" para encontrar a loja mais perto de você. Se preferir, também poderá iniciar um pedido direto pelo nosso WhatsApp e montar sua lista de desejos pelo próprio site.</p>
+            </details>
+          </div>
+        </div>
+      </section>
+
       <footer>
         <div className="container">
           <div>
@@ -543,22 +580,22 @@ export default function App() {
           <div>
             <h4>Suporte</h4>
             <ul>
-              <li><a href="#home">FAQs</a></li>
-              <li><a href="#home">Termos & Condições</a></li>
-              <li><a href="#home">Políticas de Privacidade</a></li>
+              <li><a href="#faq">FAQs</a></li>
+              <li><a href="#" onClick={(e) => { e.preventDefault(); setViewState('terms'); }}>Termos & Condições</a></li>
+              <li><a href="#" onClick={(e) => { e.preventDefault(); setViewState('privacy'); }}>Políticas de Privacidade</a></li>
             </ul>
           </div>
           <div>
             <h4>Redes Sociais</h4>
             <div className="social-links">
-              <a href="#home" aria-label="Facebook">f</a>
-              <a href="https://wa.me/551632583182" target="_blank" rel="noreferrer" aria-label="WhatsApp">w</a>
-              <a href="#home" aria-label="Instagram">ig</a>
+              <a href="https://www.instagram.com/shivaparvati.com.br/" target="_blank" rel="noreferrer" aria-label="Instagram">
+                <Instagram size={24} />
+              </a>
             </div>
           </div>
           <div className="contact-info">
             <h4>Informações de Contato</h4>
-            <p><strong>Telefone:</strong> (16) 3258-3182</p>
+            <p><strong>WhatsApp / Celular:</strong> (16) 99709-0967</p>
             <p><strong>E-mail:</strong> contato@shivaparvati.com.br</p>
             <p><strong>Endereço:</strong> R Donizete Miola, 623 - Distrito Industrial Ercidio Borgonovi<br />Fernando Prestes, SP - CEP 15.940-000</p>
           </div>
