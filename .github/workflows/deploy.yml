@@ -12,6 +12,9 @@ permissions:
 
 jobs:
   build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout do Código
@@ -20,17 +23,18 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20  # Atualizado para evitar avisos de versão antiga
+          node-version: 20
 
       - name: Instalar Dependências e Compilar
         run: |
           npm install --legacy-peer-deps
-          npm run build --if-present  # Executa o build se o script existir
+          npm run build --if-present
 
       - name: Upload do Artefato
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .         # Altera temporariamente para a raiz caso não use pastas de build
+          path: .
 
       - name: Deploy para GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
