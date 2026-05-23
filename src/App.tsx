@@ -441,7 +441,7 @@ export default function App() {
                 <div className="product-details">
                   <h3>{activeCategory.title}</h3>
                   <p className="product-desc"><strong>Tipos:</strong> {getCategoryItemsStr(activeCategory.id) || 'Variados'}</p>
-                  <button className="btn btn-secondary" onClick={() => setViewState('category')}>Ver Sabores e Detalhes</button>
+                  <button className="btn btn-secondary" onClick={() => setViewState('category')}>Explorar Sabores e Montar Pedido</button>
                 </div>
               </div>
             )}
