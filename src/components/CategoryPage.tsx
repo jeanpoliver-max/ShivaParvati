@@ -41,7 +41,7 @@ export default function CategoryPage({
     <div className="category-page-wrapper">
       <div className="cat-header" style={{ backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), url(${category.image})` }}>
         <button className="back-btn" onClick={onBack}>
-          <ChevronLeft size={24} /> Voltar
+          <ChevronLeft size={24} /> Voltar para Linhas de Produtos
         </button>
         <div className="cat-title-area">
           <h1>{category.title}</h1>
@@ -108,6 +108,12 @@ export default function CategoryPage({
               <p>Nenhum sabor encontrado para a sua busca. 😢</p>
             </div>
           )}
+        </div>
+
+        <div style={{ marginTop: '40px', display: 'flex', justifyContent: 'center' }}>
+          <button className="back-btn" style={{ position: 'relative', top: 'auto', left: 'auto', background: '#8B4513', border: 'none' }} onClick={onBack}>
+            <ChevronLeft size={24} /> Voltar para Linhas de Produtos
+          </button>
         </div>
       </div>
     </div>

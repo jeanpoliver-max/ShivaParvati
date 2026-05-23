@@ -303,7 +303,12 @@ export default function App() {
         <>
           <CategoryPage 
             category={activeCategory} 
-            onBack={() => setViewState('home')} 
+            onBack={() => {
+              setViewState('home');
+              setTimeout(() => {
+                document.getElementById('produtos')?.scrollIntoView({ behavior: 'smooth' });
+              }, 100);
+            }} 
             favorites={favorites}
             toggleFavorite={toggleFavorite}
             setIsFavOpen={openFavoritesMenu}
@@ -441,7 +446,7 @@ export default function App() {
                 <div className="product-details">
                   <h3>{activeCategory.title}</h3>
                   <p className="product-desc"><strong>Tipos:</strong> {getCategoryItemsStr(activeCategory.id) || 'Variados'}</p>
-                  <button className="btn btn-secondary" onClick={() => setViewState('category')}>Explorar Sabores e Montar Pedido</button>
+                  <button className="btn btn-secondary" onClick={() => setViewState('category')}>Explorar Sabores e Criar Lista de Desejos</button>
                 </div>
               </div>
             )}

@@ -1,7 +1,0 @@
-# Proibir o AI Studio de apagar as configurações de Deploy
-.github/
-.github/workflows/
-.github/workflows/deploy.yml
-
-# Proibir de alterar as configurações críticas do servidor
-vite.config.ts
