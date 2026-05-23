@@ -1,0 +1,148 @@
+export const massasData = [
+  { name: 'AGNOLOTI PALMITO', type: 'Agnoloti' },
+  { name: 'CANELONE 4 QUEIJOS', type: 'Canelone' },
+  { name: 'CANELONE BERINGELA', type: 'Canelone' },
+  { name: 'CANELONE BROCOLIS', type: 'Canelone' },
+  { name: 'CANELONE ESPINAFRE', type: 'Canelone' },
+  { name: 'CANELONE FRANGO', type: 'Canelone' },
+  { name: 'CANELONE PRESUNTO QUEIJO', type: 'Canelone' },
+  { name: 'CAPELETTI 4 QUEIJOS', type: 'Capeletti' },
+  { name: 'CAPELETTI CABOTIA CATUPIRY', type: 'Capeletti' },
+  { name: 'CAPELETTI CARNE', type: 'Capeletti' },
+  { name: 'CAPELETTI FRANGO', type: 'Capeletti' },
+  { name: 'CONCHIGLIONE 4 QUEIJOS', type: 'Conchiglione' },
+  { name: 'CONCHIGLIONE BACALHAU', type: 'Conchiglione' },
+  { name: 'CONCHIGLIONE BROCOLIS', type: 'Conchiglione' },
+  { name: 'CONCHIGLIONE CABOTIA CATUPIRY', type: 'Conchiglione' },
+  { name: 'CONCHIGLIONE CALABRESA', type: 'Conchiglione' },
+  { name: 'CONCHIGLIONE CARNE', type: 'Conchiglione' },
+  { name: 'CONCHIGLIONE FRANGO CATUPIRY', type: 'Conchiglione' },
+  { name: 'CONCHIGLIONE PRESUNTO QUEIJO', type: 'Conchiglione' },
+  { name: 'CONCHIGLIONE TOMATE SECO', type: 'Conchiglione' },
+  { name: 'LASANHA 4 QUEIJOS', type: 'Lasanha' },
+  { name: 'LASANHA BERINGELA', type: 'Lasanha' },
+  { name: 'LASANHA FRANGO', type: 'Lasanha' },
+  { name: 'LASANHA MOLHO BOLONHESA', type: 'Lasanha' },
+  { name: 'LASANHA MOLHO BRANCO', type: 'Lasanha' },
+  { name: 'LASANHA MOLHO SUGO', type: 'Lasanha' },
+  { name: 'LASANHA PRESUNTO QUEIJO', type: 'Lasanha' },
+  { name: 'LASANHA RUCULA TOMATE SECO', type: 'Lasanha' },
+  { name: 'NHOQUE BATATA', type: 'Nhoque' },
+  { name: 'NHOQUE BATATA DOCE', type: 'Nhoque' },
+  { name: 'NHOQUE CABOTIA', type: 'Nhoque' },
+  { name: 'NHOQUE MANDIOCA', type: 'Nhoque' },
+  { name: 'NHOQUE MANDIOQUINHA', type: 'Nhoque' },
+  { name: 'NHOQUE QUEIJO', type: 'Nhoque' },
+  { name: 'RONDELLI 4 QUEIJOS', type: 'Rondelli' },
+  { name: 'RONDELLI BROCOLIS', type: 'Rondelli' },
+  { name: 'RONDELLI DAMASCO', type: 'Rondelli' },
+  { name: 'RONDELLI ESPINAFRE', type: 'Rondelli' },
+  { name: 'RONDELLI FRANGO CATUPIRY', type: 'Rondelli' },
+  { name: 'RONDELLI PRESUNTO QUEIJO', type: 'Rondelli' },
+  { name: 'RONDELLI RUCULA TOMATE SECO', type: 'Rondelli' },
+  { name: 'RONDELLI TOMATE SECO', type: 'Rondelli' },
+  { name: 'SUFIOLI 4 QUEIJOS', type: 'Sufioli' },
+  { name: 'SUFIOLI BACALHAU', type: 'Sufioli' },
+  { name: 'SUFIOLI CABOTIA CARNE SECA', type: 'Sufioli' },
+  { name: 'SUFIOLI CABOTIA CATUPIRY', type: 'Sufioli' },
+  { name: 'SUFIOLI COPA LOMBO CATUPIRY FIGO', type: 'Sufioli' },
+  { name: 'SUFIOLI COPA LOMBO GELEIA PIMENTA', type: 'Sufioli' },
+  { name: 'SUFIOLI DAMASCO', type: 'Sufioli' },
+  { name: 'SUFIOLI ESCAROLA', type: 'Sufioli' },
+  { name: 'SUFIOLI ESPINAFRE', type: 'Sufioli' },
+  { name: 'SUFIOLI FRANGO CATUPIRY', type: 'Sufioli' },
+  { name: 'SUFIOLI PRESUNTO QUEIJO', type: 'Sufioli' },
+  { name: 'SUFIOLI QUEIJO BRIE DAMASCO', type: 'Sufioli' },
+  { name: 'SUFIOLI QUEIJO NOZES', type: 'Sufioli' },
+  { name: 'SUFIOLI RICOTA PASSAS', type: 'Sufioli' },
+  { name: 'SUFIOLI TOMATE SECO MANJERICAO', type: 'Sufioli' },
+  { name: 'SUFIOLI TOMATE SECO QUEIJO', type: 'Sufioli' },
+  { name: 'TORTELINI 4 QUEIJOS', type: 'Tortelini' },
+  { name: 'TORTELINI FRANGO CATUPIRY', type: 'Tortelini' },
+  { name: 'TORTELINI PRESUNTO QUEIJO', type: 'Tortelini' },
+  { name: 'TORTELLI MOZZARELA BUFALA TOMATE SECO', type: 'Tortelli' },
+  { name: 'TORTELONI 4 QUEIJOS', type: 'Torteloni' },
+  { name: 'TORTELONI FRANGO CATUPIRY', type: 'Torteloni' },
+  { name: 'TORTELONI PRESUNTO QUEIJO', type: 'Torteloni' }
+].map(item => ({...item, embalagem: ['900g', '450g']}));
+
+export const pizzasData = [
+  { name: 'MINI PIZZA MUSSARELA', type: 'Mini Pizza' },
+  { name: 'MINI PIZZA CALABRESA', type: 'Mini Pizza' },
+  { name: 'MINI PIZZA PRESUNTO QUEIJO', type: 'Mini Pizza' },
+  { name: 'MINI PIZZA FRANGO CATUPIRY', type: 'Mini Pizza' },
+  { name: 'MINI PIZZA PORTUGUESA', type: 'Mini Pizza' },
+  { name: 'MINI PIZZA MARGUERITA', type: 'Mini Pizza' },
+  { name: 'MINI PIZZA 4 QUEIJOS', type: 'Mini Pizza' }
+].map(item => ({...item, embalagem: ['Unidade']}));
+
+export const tortasData = [
+  { name: 'TORTA ATUM', type: 'Torta' },
+  { name: 'TORTA 4 QUEIJOS', type: 'Torta' },
+  { name: 'TORTA ALHO PORÓ', type: 'Torta' },
+  { name: 'TORTA BACALHAU', type: 'Torta' },
+  { name: 'TORTA BRÓCOLIS', type: 'Torta' },
+  { name: 'TORTA CALABRESA', type: 'Torta' },
+  { name: 'TORTA CAMARÃO', type: 'Torta' },
+  { name: 'TORTA CARNE SECA', type: 'Torta' },
+  { name: 'TORTA ESCAROLA', type: 'Torta' },
+  { name: 'TORTA FRANGO CATUPIRY', type: 'Torta' },
+  { name: 'TORTA PALMITO', type: 'Torta' },
+  { name: 'TORTA SARDINHA', type: 'Torta' },
+  { name: 'TORTA INTEGRAL NOZES', type: 'Torta' },
+  { name: 'TORTA PRESUNTO QUEIJO', type: 'Torta' }
+].map(item => ({...item, embalagem: ['900g']}));
+
+export const molhosData = [
+  { name: 'MOLHO BECHAMEL', type: 'Bechamel' },
+  { name: 'MOLHO BOLONHESA', type: 'Bolonhesa' },
+  { name: 'MOLHO BRANCO', type: 'Branco' },
+  { name: 'MOLHO GORGONZOLA', type: 'Gorgonzola' },
+  { name: 'MOLHO PESTO', type: 'Pesto' },
+  { name: 'MOLHO TOMATE', type: 'Tomate' }
+].map(item => ({...item, embalagem: ['450g']}));
+
+export const caldosData = [
+  { name: 'CALDO CARNE', type: 'Caldo' },
+  { name: 'CALDO FRANGO', type: 'Caldo' },
+  { name: 'CREME ABOBORA', type: 'Creme' },
+  { name: 'CREME BROCOLIS', type: 'Creme' },
+  { name: 'SOPA LEGUMES', type: 'Sopa' },
+  { name: 'CALDO DE ALHO PORÓ', type: 'Caldo' },
+  { name: 'CALDO DE CABOTIÁ', type: 'Caldo' },
+  { name: 'CALDO DE ERVILHA', type: 'Caldo' },
+  { name: 'CALDO DE FEIJÃO', type: 'Caldo' },
+  { name: 'CALDO DE MANDIOCA', type: 'Caldo' },
+  { name: 'CALDO DE MANDIOQUINHA', type: 'Caldo' },
+  { name: 'CALDO DE PALMITO', type: 'Caldo' },
+  { name: 'CALDO VERDE', type: 'Caldo' }
+].map(item => ({...item, embalagem: ['450g']}));
+
+export const diversosData = [
+  { name: 'ALFAJOR', type: 'Alfajor', embalagem: ['350g'] },
+  { name: 'BELISCÃO', type: 'Beliscão', embalagem: ['350g'] },
+  { name: 'BOLACHA DE CERVEJA', type: 'Bolacha', embalagem: ['350g'] },
+  { name: 'BOLACHA DE NATA', type: 'Bolacha', embalagem: ['350g'] },
+  { name: 'BOLACHA FRANCÊS', type: 'Bolacha', embalagem: ['350g'] },
+  { name: 'BROA DE FUBÁ', type: 'Broa', embalagem: ['350g'] },
+  { name: 'CASADINHO DOCE DE LEITE', type: 'Casadinho', embalagem: ['350g'] },
+  { name: 'CASADINHO GOIABADA', type: 'Casadinho', embalagem: ['350g'] },
+  { name: 'COALHADA FRESCA', type: 'Coalhada', embalagem: ['350g'] },
+  { name: 'CROSTINI', type: 'Crostini', embalagem: ['350g'] },
+  { name: 'LATUGUE', type: 'Latugue', embalagem: ['350g'] },
+  { name: 'PALITO DE CEBOLA', type: 'Palito', embalagem: ['350g', '900g'] },
+  { name: 'PALITO DE ORÉGANO', type: 'Palito', embalagem: ['350g', '900g'] },
+  { name: 'ROSQUINHA DE NATA', type: 'Rosquinha', embalagem: ['350g'] },
+  { name: 'ROSQUINHA PINGA', type: 'Rosquinha', embalagem: ['350g'] }
+];
+
+export const resellersData = [
+  { state: 'SP', stateName: 'São Paulo', city: 'Ribeirão Preto', name: 'Shiva Parvati Matriz', address: 'Rua Principal, 1234 - Centro', phone: '5516997090967' },
+  { state: 'SP', stateName: 'São Paulo', city: 'São Paulo', name: 'Empório Gourmet SP', address: 'Av. Paulista, 1000 - Bela Vista', phone: '5511999999999' },
+  { state: 'SP', stateName: 'São Paulo', city: 'Campinas', name: 'Sabor & Arte', address: 'Rua Cambuí, 45 - Cambuí', phone: '5519999999999' },
+  { state: 'MG', stateName: 'Minas Gerais', city: 'Belo Horizonte', name: 'Armazém Mineiro', address: 'Av. Afonso Pena, 500 - Savassi', phone: '5531999999999' },
+  { state: 'MG', stateName: 'Minas Gerais', city: 'Uberlândia', name: 'Empório do Triângulo', address: 'Av. Rondon Pacheco, 200 - Centro', phone: '5534999999999' },
+  { state: 'RJ', stateName: 'Rio de Janeiro', city: 'Rio de Janeiro', name: 'Boutique RJ', address: 'Rua Visconde de Pirajá, 300 - Ipanema', phone: '5521999999999' },
+  { state: 'PR', stateName: 'Paraná', city: 'Curitiba', name: 'Empório Sul', address: 'Rua das Flores, 10 - Batel', phone: '5541999999999' }
+];
+
