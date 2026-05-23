@@ -33,7 +33,7 @@ jobs:
       - name: Upload do Artefato
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: ./dist # 👈 Alterado para a pasta de distribuição gerada pelo Vite
 
       - name: Deploy para GitHub Pages
         id: deployment
