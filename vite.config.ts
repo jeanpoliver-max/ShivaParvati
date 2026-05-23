@@ -5,7 +5,7 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
-    base: './', // 👈 ADICIONE EXATAMENTE ESTA LINHA AQUI
+    base: '/', // 👈 Deixe apenas a barra (sem ponto). É o padrão correto para domínios próprios e para o AI Studio
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
