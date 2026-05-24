@@ -7,6 +7,7 @@ import PrivacyPage from './components/PrivacyPage';
 import { getResellers, Reseller } from './services/resellers';
 import { getProducts, Product } from './services/products';
 import { getCategories, ProductCategory } from './services/categories';
+import { addClient } from './services/clients';
 import image1 from './assets/images/rondelli_bolonhesa_1779487429390.png';
 import image2 from './assets/images/lasanha_rucula_tomate_1779487887471.png';
 import image3 from './assets/images/sorrentino_queijo_1779487902156.png';
@@ -43,15 +44,18 @@ export default function App() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [activeCategory, setActiveCategory] = useState<ProductCategory | null>(null);
   const [viewState, setViewState] = useState<'home' | 'category' | 'admin' | 'terms' | 'privacy'>('home');
-  const [favorites, setFavorites] = useState<{name: string, size: string}[]>([]);
+  const [favorites, setFavorites] = useState<{name: string, size: string, quantity: number}[]>([]);
   const [isFavOpen, setIsFavOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<'favorites' | 'locator'>('favorites');
-  const [checkoutStep, setCheckoutStep] = useState<'cart' | 'stateSelect' | 'citySelect' | 'resellerSelect'>('cart');
+  const [checkoutStep, setCheckoutStep] = useState<'cart' | 'leadCapture' | 'stateSelect' | 'citySelect' | 'resellerSelect'>('cart');
+  const [leadCode, setLeadCode] = useState({ name: '', phone: '' });
   const [selectedStateStr, setSelectedStateStr] = useState<string>('');
   const [selectedCityStr, setSelectedCityStr] = useState<string>('');
   const [resellersLocal, setResellersLocal] = useState<Reseller[]>([]);
   const [productsLocal, setProductsLocal] = useState<Product[]>([]);
   const [categoriesLocal, setCategoriesLocal] = useState<ProductCategory[]>([]);
+
+  const totalItems = favorites.reduce((acc, curr) => acc + curr.quantity, 0);
 
   useEffect(() => {
     setResellersLocal(getResellers());
@@ -108,22 +112,30 @@ export default function App() {
     setIsFavOpen(true);
   };
 
-  const toggleFavorite = (name: string, size: string) => {
+  const updateQuantity = (name: string, size: string, delta: number) => {
     setFavorites(prev => {
-      const exists = prev.find(fav => fav.name === name && fav.size === size);
-      if (exists) {
-        return prev.filter(fav => !(fav.name === name && fav.size === size));
+      const existing = prev.find(fav => fav.name === name && fav.size === size);
+      if (existing) {
+        const newQuantity = existing.quantity + delta;
+        if (newQuantity <= 0) {
+          return prev.filter(fav => !(fav.name === name && fav.size === size));
+        } else {
+          return prev.map(fav => fav.name === name && fav.size === size ? { ...fav, quantity: newQuantity } : fav);
+        }
       } else {
-        return [...prev, { name, size }];
+        if (delta > 0) {
+          return [...prev, { name, size, quantity: delta }];
+        }
+        return prev;
       }
     });
   };
 
   const createWhatsAppLink = (phone: string) => {
-    if (favorites.length === 0) return '#';
+    if (totalItems === 0) return '#';
     let text = 'Olá! Gostaria de encomendar os seguintes produtos:\n\n';
     favorites.forEach(f => {
-      text += `- ${f.name} (${f.size})\n`;
+      text += `- ${f.quantity}x ${f.name} - Embalagem ${f.size}\n`;
     });
     return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
   };
@@ -169,8 +181,8 @@ export default function App() {
     const interesse = formData.get('interesse');
 
     let mensagemInteresse = "";
-    if (interesse === "comprar") {
-      mensagemInteresse = "Gostaria de comprar os produtos da ShivaParvati";
+    if (interesse === "falar") {
+      mensagemInteresse = "Gostaria de falar com a Shiva Parvati";
     } else if (interesse === "trabalhe") {
       mensagemInteresse = "Quero trabalhar com a ShivaParvati";
     } else if (interesse === "parceria") {
@@ -180,6 +192,76 @@ export default function App() {
     const text = `Olá, meu nome é ${nome}.\nMeu telefone é ${telefone} e e-mail ${email}.\n\n${mensagemInteresse}`;
     const encodedText = encodeURIComponent(text);
     window.open(`https://wa.me/5516997090967?text=${encodedText}`, '_blank');
+  };
+
+  const sendOrderWhatsApp = (name: string, phone: string) => {
+    const defaultPhone = "5516997090967";
+    let text = `*Novo Pedido*\n\n*Cliente:* ${name}\n*Contato:* ${phone}\n\n*Lista de Produtos:*\n`;
+    favorites.forEach(fav => {
+      text += `- ${fav.quantity}x ${fav.name} - Embalagem ${fav.size}\n`;
+    });
+    
+    const encodedText = encodeURIComponent(text);
+    window.open(`https://wa.me/${defaultPhone}?text=${encodedText}`, '_blank');
+    closeDrawer();
+  };
+
+  const handleLeadSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const date = new Date().toISOString();
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          let city = '';
+          try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+            const data = await response.json();
+            if (data && data.address) {
+              const cityName = data.address.city || data.address.town || data.address.village;
+              const stateName = data.address.state;
+              if (cityName && stateName) {
+                city = `${cityName} - ${stateName}`;
+              } else if (cityName) {
+                city = cityName;
+              }
+            }
+          } catch (e) {
+            console.error('Error fetching city data from coordinates', e);
+          }
+          
+          addClient({
+            name: leadCode.name,
+            phone: leadCode.phone,
+            date,
+            latitude,
+            longitude,
+            city
+          });
+          sendOrderWhatsApp(leadCode.name, leadCode.phone);
+        },
+        (error) => {
+          addClient({
+            name: leadCode.name,
+            phone: leadCode.phone,
+            date,
+            latitude: null,
+            longitude: null
+          });
+          sendOrderWhatsApp(leadCode.name, leadCode.phone);
+        }
+      );
+    } else {
+      addClient({
+        name: leadCode.name,
+        phone: leadCode.phone,
+        date,
+        latitude: null,
+        longitude: null
+      });
+      sendOrderWhatsApp(leadCode.name, leadCode.phone);
+    }
   };
 
   const renderFavDrawer = () => {
@@ -194,6 +276,9 @@ export default function App() {
             {checkoutStep === 'stateSelect' && (
               <h3><MapPin color="#d32f2f" size={20} style={{marginRight: '8px'}} /> Onde você está?</h3>
             )}
+            {checkoutStep === 'leadCapture' && (
+              <h3><ShoppingBag color="#d32f2f" size={20} style={{marginRight: '8px'}} /> Detalhes do Pedido</h3>
+            )}
             {checkoutStep === 'citySelect' && (
               <h3><MapPin color="#d32f2f" size={20} style={{marginRight: '8px'}} /> Escolha a cidade</h3>
             )}
@@ -204,7 +289,7 @@ export default function App() {
           </div>
           <div className="fav-body">
             {drawerMode === 'favorites' && checkoutStep === 'cart' && (
-              favorites.length === 0 ? (
+              totalItems === 0 ? (
                 <div className="fav-empty">
                   <ShoppingBag size={48} color="#ccc" />
                   <p>Sua lista de desejos está vazia.</p>
@@ -216,13 +301,51 @@ export default function App() {
                     <li key={i}>
                       <div>
                         <strong>{fav.name}</strong>
-                        <span>({fav.size})</span>
+                        <span style={{ display: 'block', color: '#666', fontSize: '13px', marginTop: '4px' }}>Embalagem {fav.size}</span>
                       </div>
-                      <button onClick={() => toggleFavorite(fav.name, fav.size)}>Remover</button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8f4e8', borderRadius: '16px', padding: '2px 6px' }}>
+                        <button onClick={() => updateQuantity(fav.name, fav.size, -1)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: '#8B4513', padding: '0 5px' }}>-</button>
+                        <span style={{ fontSize: '14px', fontWeight: 600 }}>{fav.quantity}</span>
+                        <button onClick={() => updateQuantity(fav.name, fav.size, 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: '#8B4513', padding: '0 5px' }}>+</button>
+                      </div>
                     </li>
                   ))}
                 </ul>
               )
+            )}
+            
+            {checkoutStep === 'leadCapture' && (
+              <div className="lead-capture-container" style={{ padding: '20px 0' }}>
+                <p style={{ marginBottom: '20px', color: '#555' }}>Para continuarmos com seu pedido, por favor informe seus dados:</p>
+                <form onSubmit={handleLeadSubmit}>
+                  <div className="form-group" style={{ marginBottom: '15px', textAlign: 'left' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600 }}>Nome Completo *</label>
+                    <input 
+                      type="text" 
+                      required 
+                      value={leadCode.name}
+                      onChange={e => setLeadCode({...leadCode, name: e.target.value})}
+                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }}
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: '20px', textAlign: 'left' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600 }}>Telefone / WhatsApp *</label>
+                    <input 
+                      type="tel" 
+                      required 
+                      value={leadCode.phone}
+                      onChange={e => setLeadCode({...leadCode, phone: e.target.value})}
+                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }}
+                    />
+                  </div>
+                  <button type="submit" className="btn btn-whatsapp-order" style={{ width: '100%', marginBottom: '15px' }}>
+                    Concluir e Enviar Pedido
+                  </button>
+                  <button type="button" className="btn-link" onClick={() => setCheckoutStep('cart')} style={{ width: '100%', textAlign: 'center' }}>
+                    Voltar para meus itens
+                  </button>
+                </form>
+              </div>
             )}
             
             {checkoutStep === 'stateSelect' && (
@@ -284,10 +407,23 @@ export default function App() {
             )}
             
           </div>
-          {drawerMode === 'favorites' && checkoutStep === 'cart' && favorites.length > 0 && (
-            <div className="fav-footer">
-              <button onClick={() => setCheckoutStep('stateSelect')} className="btn btn-whatsapp-order">
+          {drawerMode === 'favorites' && checkoutStep === 'cart' && totalItems > 0 && (
+            <div className="fav-footer" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <button onClick={() => setCheckoutStep('leadCapture')} className="btn btn-whatsapp-order">
                 Avançar para Pedido
+              </button>
+              <button 
+                onClick={() => {
+                  setFavorites([]);
+                  closeDrawer();
+                  setViewState('home');
+                  setTimeout(() => {
+                    document.getElementById('produtos')?.scrollIntoView({ behavior: 'smooth' });
+                  }, 100);
+                }} 
+                style={{ background: 'transparent', border: '1px solid #d32f2f', color: '#d32f2f', padding: '12px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', textAlign: 'center' }}
+              >
+                Limpar Lista
               </button>
             </div>
           )}
@@ -320,7 +456,7 @@ export default function App() {
               }, 100);
             }} 
             favorites={favorites}
-            toggleFavorite={toggleFavorite}
+            updateQuantity={updateQuantity}
             setIsFavOpen={openFavoritesMenu}
           />
           {renderFavDrawer()}
@@ -344,14 +480,14 @@ export default function App() {
             <li><a href="#depoimentos" onClick={() => setMenuOpen(false)}>Depoimentos</a></li>
           </ul>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-            {favorites.length > 0 && (
+            {totalItems > 0 && (
               <button 
                 onClick={openFavoritesMenu} 
                 style={{ background: 'transparent', border: 'none', cursor: 'pointer', position: 'relative', display: 'flex', alignItems: 'center', padding: 0 }}
                 aria-label="Ver lista de desejos"
               >
                 <Heart size={28} fill="#d32f2f" color="#d32f2f" />
-                <span style={{ position: 'absolute', top: '-6px', right: '-12px', background: '#1A1A1A', color: '#FFF', fontSize: '11px', padding: '2px 7px', border: '2px solid #FFF', borderRadius: '12px', fontWeight: 'bold' }}>{favorites.length}</span>
+                <span style={{ position: 'absolute', top: '-6px', right: '-12px', background: '#1A1A1A', color: '#FFF', fontSize: '11px', padding: '2px 7px', border: '2px solid #FFF', borderRadius: '12px', fontWeight: 'bold' }}>{totalItems}</span>
               </button>
             )}
             <div
@@ -400,7 +536,7 @@ export default function App() {
             <div className="form-group">
               <select id="interesse" name="interesse" required defaultValue="">
                 <option value="" disabled hidden>Selecione...</option>
-                <option value="comprar">Comprar</option>
+                <option value="falar">Falar com a Shiva Parvati</option>
                 <option value="trabalhe">Trabalhe Conosco</option>
                 <option value="parceria">Parcerias</option>
               </select>

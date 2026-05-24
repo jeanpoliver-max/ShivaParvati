@@ -6,13 +6,13 @@ export default function CategoryPage({
   category, 
   onBack,
   favorites,
-  toggleFavorite,
+  updateQuantity,
   setIsFavOpen
 }: { 
   category: any, 
   onBack: () => void,
-  favorites: {name: string, size: string}[],
-  toggleFavorite: (name: string, size: string) => void,
+  favorites: {name: string, size: string, quantity: number}[],
+  updateQuantity: (name: string, size: string, delta: number) => void,
   setIsFavOpen: (val: boolean) => void
 }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,9 +33,12 @@ export default function CategoryPage({
     });
   }, [data, searchTerm, activeFilter]);
 
-  const isFavorite = (name: string, size: string) => {
-    return favorites.some(fav => fav.name === name && fav.size === size);
+  const getQuantity = (name: string, size: string) => {
+    const fav = favorites.find(f => f.name === name && f.size === size);
+    return fav ? fav.quantity : 0;
   };
+
+  const totalItems = favorites.reduce((acc, curr) => acc + curr.quantity, 0);
 
   return (
     <div className="category-page-wrapper">
@@ -61,8 +64,8 @@ export default function CategoryPage({
             />
           </div>
           <button className="fav-toggle-btn" onClick={() => setIsFavOpen(true)}>
-            <Heart size={20} fill={favorites.length > 0 ? '#d32f2f' : 'transparent'} color={favorites.length > 0 ? '#d32f2f' : '#333'} />
-            Lista de Desejos ({favorites.length})
+            <Heart size={20} fill={totalItems > 0 ? '#d32f2f' : 'transparent'} color={totalItems > 0 ? '#d32f2f' : '#333'} />
+            Lista de Desejos ({totalItems})
           </button>
         </div>
 
@@ -89,17 +92,19 @@ export default function CategoryPage({
                   <h3>{item.name}</h3>
                 </div>
                 <div className="item-actions">
-                  {item.embalagem.map(size => (
-                    <button 
-                      key={size}
-                      className={`action-btn ${isFavorite(item.name, size) ? 'active' : ''}`}
-                      onClick={() => toggleFavorite(item.name, size)}
-                      title={`Favoritar embalagem de ${size}`}
-                    >
-                      <span>{size}</span>
-                      <Heart size={16} fill={isFavorite(item.name, size) ? '#d32f2f' : 'transparent'} color={isFavorite(item.name, size) ? '#d32f2f' : '#666'} />
-                    </button>
-                  ))}
+                  {item.embalagem.map(size => {
+                    const quantity = getQuantity(item.name, size);
+                    return (
+                      <div key={size} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', padding: '8px 12px', background: '#f8f4e8', borderRadius: '8px' }}>
+                        <span style={{ fontSize: '14px', fontWeight: 500, color: '#333' }}>Embalagem {size}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#FFF', borderRadius: '16px', padding: '2px 6px', border: '1px solid #e0d8c3' }}>
+                          <button onClick={() => updateQuantity(item.name, size, -1)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: '#8B4513', padding: '0 8px', fontWeight: 'bold' }}>-</button>
+                          <span style={{ fontSize: '14px', fontWeight: 600, minWidth: '16px', textAlign: 'center' }}>{quantity}</span>
+                          <button onClick={() => updateQuantity(item.name, size, 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: '#8B4513', padding: '0 8px', fontWeight: 'bold' }}>+</button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             ))

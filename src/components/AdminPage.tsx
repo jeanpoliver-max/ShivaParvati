@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { getResellers, addReseller, updateReseller, deleteReseller, Reseller } from '../services/resellers';
 import { getAdminUsers, saveAdminUsers, AdminUser } from '../services/auth';
 import { getProducts, addProduct, updateProduct, deleteProduct, Product } from '../services/products';
+import { getClients, updateClient, deleteClient, Client } from '../services/clients';
 import { ChevronLeft, Edit, Trash2, LogOut, Users, MapPin, Eye, EyeOff, Package, Layers } from 'lucide-react';
 import AdminAuth from './AdminAuth';
 import { getCategories, addCategory, updateCategory, deleteCategory, ProductCategory } from '../services/categories';
 
 export default function AdminPage({ onBack }: { onBack: () => void }) {
   const [loggedInUser, setLoggedInUser] = useState<AdminUser | null>(null);
-  const [activeTab, setActiveTab] = useState<'resellers' | 'users' | 'products' | 'categories'>('resellers');
+  const [activeTab, setActiveTab] = useState<'resellers' | 'users' | 'products' | 'categories' | 'clientes'>('resellers');
   
   // Resellers State
   const [resellers, setResellers] = useState<Reseller[]>([]);
@@ -43,6 +44,11 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
     title: '', image: ''
   });
 
+  // Clients
+  const [clients, setClients] = useState<Client[]>([]);
+  const [editingClientId, setEditingClientId] = useState<string | null>(null);
+  const [clientFormData, setClientFormData] = useState({ name: '', phone: '' });
+
   useEffect(() => {
     if (loggedInUser) {
       setResellers(getResellers());
@@ -50,6 +56,7 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
       setCategories(getCategories());
       if (loggedInUser.isMaster) {
         setAdminUsers(getAdminUsers());
+        setClients(getClients());
       }
     }
   }, [loggedInUser]);
@@ -210,6 +217,28 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
     }
   };
 
+  const handleDeleteClient = (id: string) => {
+    if (window.confirm('Tem certeza que deseja excluir este cliente?')) {
+      deleteClient(id);
+      setClients(getClients());
+    }
+  };
+
+  const startEditClient = (c: Client) => {
+    setEditingClientId(c.id);
+    setClientFormData({ name: c.name, phone: c.phone });
+  };
+
+  const handleSaveClient = (e: React.FormEvent, id: string) => {
+    e.preventDefault();
+    const c = clients.find(client => client.id === id);
+    if (c) {
+      updateClient({ ...c, name: clientFormData.name, phone: clientFormData.phone });
+      setClients(getClients());
+      setEditingClientId(null);
+    }
+  };
+
   if (!loggedInUser) {
     return <AdminAuth onLogin={setLoggedInUser} onBack={onBack} />;
   }
@@ -255,6 +284,14 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
                 style={{ background: 'none', border: 'none', padding: '10px 20px', fontSize: '16px', fontWeight: 600, cursor: 'pointer', color: activeTab === 'users' ? '#8B4513' : '#666', borderBottom: activeTab === 'users' ? '2px solid #8B4513' : '2px solid transparent', display: 'flex', alignItems: 'center', gap: '8px' }}
               >
                 <Users size={20} /> Usuários (Administradores)
+              </button>
+            )}
+            {loggedInUser.isMaster && (
+              <button 
+                onClick={() => setActiveTab('clientes')} 
+                style={{ background: 'none', border: 'none', padding: '10px 20px', fontSize: '16px', fontWeight: 600, cursor: 'pointer', color: activeTab === 'clientes' ? '#8B4513' : '#666', borderBottom: activeTab === 'clientes' ? '2px solid #8B4513' : '2px solid transparent', display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
+                <Users size={20} /> Gestão de Clientes
               </button>
             )}
           </div>
@@ -507,6 +544,47 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
                     </div>
                   ))}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'clientes' && loggedInUser.isMaster && (
+            <div className="admin-content" style={{ display: 'block' }}>
+              <h3 style={{ marginBottom: '20px', color: '#1A1A1A' }}>Gestão de Clientes (Leads Capturados)</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                {clients.length === 0 && <p style={{ color: '#666' }}>Nenhum lead capturado ainda.</p>}
+                {clients.map(c => (
+                  <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f9f9f9', padding: '15px', borderRadius: '8px', border: '1px solid #eee' }}>
+                    {editingClientId === c.id ? (
+                      <form onSubmit={(e) => handleSaveClient(e, c.id)} style={{ flex: 1, display: 'flex', gap: '10px', alignItems: 'center' }}>
+                        <input required value={clientFormData.name} onChange={e => setClientFormData({...clientFormData, name: e.target.value})} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                        <input required value={clientFormData.phone} onChange={e => setClientFormData({...clientFormData, phone: e.target.value})} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                        <button type="submit" className="btn btn-secondary" style={{ padding: '8px 12px' }}>Salvar</button>
+                        <button type="button" onClick={() => setEditingClientId(null)} className="btn-link" style={{ padding: '8px 12px' }}>Cancelar</button>
+                      </form>
+                    ) : (
+                      <>
+                        <div style={{ flex: 1 }}>
+                          <strong style={{ fontSize: '16px', color: '#1A1A1A', display: 'block', marginBottom: '4px' }}>{c.name}</strong>
+                          <p style={{ margin: 0, fontSize: '14px', color: '#555', marginBottom: '4px' }}>{c.phone}</p>
+                          <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>
+                            Capturado em: {new Date(c.date).toLocaleString('pt-BR')} 
+                            {c.city && (
+                              <span style={{ marginLeft: '10px', color: '#8B4513' }}>| Local: {c.city}</span>
+                            )}
+                            {c.latitude && c.longitude && (
+                              <span style={{ marginLeft: '10px' }}>| Geolocalização: {c.latitude.toFixed(6)}, {c.longitude.toFixed(6)}</span>
+                            )}
+                          </p>
+                        </div>
+                        <div style={{ display: 'flex', gap: '10px', marginLeft: '15px' }}>
+                          <button type="button" onClick={() => startEditClient(c)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px', color: '#666' }}><Edit size={20} /></button>
+                          <button type="button" onClick={() => handleDeleteClient(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px', color: '#d32f2f' }}><Trash2 size={20} /></button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           )}
