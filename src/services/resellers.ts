@@ -1,3 +1,5 @@
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 import { resellersData } from '../data';
 
 export interface Reseller {
@@ -11,40 +13,36 @@ export interface Reseller {
   phone: string;
 }
 
-const STORAGE_KEY = 'shiva_parvati_resellers';
+const getCollection = () => collection(db, 'resellers');
 
-export function getResellers(): Reseller[] {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored) {
-    return JSON.parse(stored);
-  }
-  const initial = resellersData.map((r, i) => ({
-    ...r,
-    id: `reseller_${i}`,
-    googleMapsLink: `https://maps.google.com/?q=${encodeURIComponent(r.address + ', ' + r.city + ', ' + r.state)}`
-  }));
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
-  return initial;
-}
-
-export function addReseller(reseller: Omit<Reseller, 'id'>) {
-  const all = getResellers();
-  const newReseller = { ...reseller, id: Date.now().toString() };
-  all.push(newReseller);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-}
-
-export function updateReseller(reseller: Reseller) {
-  const all = getResellers();
-  const idx = all.findIndex(r => r.id === reseller.id);
-  if (idx >= 0) {
-    all[idx] = reseller;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+export async function getResellers(): Promise<Reseller[]> {
+  try {
+    const snapshot = await getDocs(getCollection());
+    const resellers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Reseller));
+    return resellers.sort((a, b) => {
+      const cityComparison = a.city.localeCompare(b.city);
+      if (cityComparison !== 0) {
+        return cityComparison;
+      }
+      return a.name.localeCompare(b.name);
+    });
+  } catch (e) {
+    console.error('Error getting resellers', e);
+    return [];
   }
 }
 
-export function deleteReseller(id: string) {
-  const all = getResellers();
-  const filtered = all.filter(r => r.id !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+export async function addReseller(reseller: Omit<Reseller, 'id'>) {
+  await addDoc(getCollection(), reseller);
 }
+
+export async function updateReseller(reseller: Reseller) {
+  const docRef = doc(db, 'resellers', reseller.id);
+  const { id, ...data } = reseller;
+  await updateDoc(docRef, data);
+}
+
+export async function deleteReseller(id: string) {
+  await deleteDoc(doc(db, 'resellers', id));
+}
+

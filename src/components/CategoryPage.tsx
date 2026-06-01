@@ -7,23 +7,31 @@ export default function CategoryPage({
   onBack,
   favorites,
   updateQuantity,
-  setIsFavOpen
+  setIsFavOpen,
+  isFavOpen
 }: { 
   category: any, 
   onBack: () => void,
   favorites: {name: string, size: string, quantity: number}[],
   updateQuantity: (name: string, size: string, delta: number) => void,
-  setIsFavOpen: (val: boolean) => void
+  setIsFavOpen: (val: boolean) => void,
+  isFavOpen?: boolean
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('Todos');
   const [data, setData] = useState<Product[]>([]);
 
   useEffect(() => {
-    setData(getProducts().filter(p => p.categoryId === category.id));
+    let mounted = true;
+    getProducts().then(prods => {
+      if (mounted) {
+        setData(prods.filter(p => p.categoryId === category.id));
+      }
+    });
+    return () => { mounted = false; };
   }, [category.id]);
 
-  const types = ['Todos', ...Array.from(new Set(data.map(i => i.type)))].sort();
+  const types = ['Todos', ...Array.from(new Set(data.map(i => i.type).filter(Boolean)))].sort();
 
   const filteredData = useMemo(() => {
     return data.filter(item => {
@@ -121,6 +129,47 @@ export default function CategoryPage({
           </button>
         </div>
       </div>
+
+      {!isFavOpen && totalItems > 0 && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#d32f2f',
+          color: '#FFF',
+          padding: '16px 24px',
+          borderRadius: '30px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px',
+          boxShadow: '0 10px 25px rgba(211, 47, 47, 0.4)',
+          zIndex: 1500,
+          animation: 'slideUp 0.3s ease-out'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ShoppingBag size={24} />
+            <span style={{ fontWeight: 600, fontSize: '15px' }}>{totalItems} {totalItems === 1 ? 'item' : 'itens'} na lista</span>
+          </div>
+          <button 
+            onClick={() => setIsFavOpen(true)}
+            style={{
+              background: '#FFF',
+              color: '#d32f2f',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '20px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              textTransform: 'uppercase',
+              fontSize: '13px',
+              transition: 'transform 0.2s',
+            }}
+          >
+            Finalizar Pedido
+          </button>
+        </div>
+      )}
     </div>
   );
 }
