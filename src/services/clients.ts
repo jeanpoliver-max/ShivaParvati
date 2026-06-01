@@ -1,3 +1,6 @@
+import { collection, getDocs, addDoc, doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { db } from '../firebase';
+
 export interface Client {
   id: string;
   name: string;
@@ -8,38 +11,36 @@ export interface Client {
   city?: string;
 }
 
-export function getClients(): Client[] {
-  const data = localStorage.getItem('shiva_clients');
-  if (!data) return [];
+const getCollection = () => collection(db, 'clients');
+
+export async function getClients(): Promise<Client[]> {
   try {
-    return JSON.parse(data);
+    const snapshot = await getDocs(getCollection());
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Client));
   } catch (e) {
+    console.error("Error getting clients:", e);
     return [];
   }
 }
 
-export function saveClients(clients: Client[]): void {
-  localStorage.setItem('shiva_clients', JSON.stringify(clients));
+export async function getClientsSync(): Promise<Client[]> {
+  // Keeping sync signature for compat, but returning empty or handling async differently if needed 
+  // It's better to refactor callers to be async
+  return [];
 }
 
-export function addClient(client: Omit<Client, 'id'>): Client {
-  const clients = getClients();
-  const newClient = { ...client, id: Date.now().toString() };
-  clients.push(newClient);
-  saveClients(clients);
-  return newClient;
+export async function addClient(client: Omit<Client, 'id'>): Promise<Client> {
+  const docRef = await addDoc(getCollection(), client);
+  return { id: docRef.id, ...client };
 }
 
-export function deleteClient(id: string): void {
-  const clients = getClients();
-  saveClients(clients.filter(c => c.id !== id));
+export async function deleteClient(id: string): Promise<void> {
+  await deleteDoc(doc(db, 'clients', id));
 }
 
-export function updateClient(updated: Client): void {
-  const clients = getClients();
-  const index = clients.findIndex(c => c.id === updated.id);
-  if (index !== -1) {
-    clients[index] = updated;
-    saveClients(clients);
-  }
+export async function updateClient(updated: Client): Promise<void> {
+  const docRef = doc(db, 'clients', updated.id);
+  const { id, ...data } = updated;
+  await updateDoc(docRef, data);
 }
+

@@ -13,13 +13,6 @@ import image2 from './assets/images/lasanha_rucula_tomate_1779487887471.png';
 import image3 from './assets/images/sorrentino_queijo_1779487902156.png';
 import image4 from './assets/images/sufioli_queijo_nozes_1779487916700.png';
 
-import catMassas from './assets/images/rondelli_bolonhesa_1779487429390.png';
-import catPizzas from './assets/images/pizza_artesanal_1779498365848.png';
-import catTortas from './assets/images/torta_salgada_1779498396152.png';
-import catMolhos from './assets/images/molhos_artesanais_1779498411741.png';
-import catCaldos from './assets/images/caldos_cremes_1779498426041.png';
-import catDiversos from './assets/images/diversos_paes_doces_1779498440884.png';
-
 const heroSlides = [
   {
     image: image1,
@@ -47,10 +40,9 @@ export default function App() {
   const [favorites, setFavorites] = useState<{name: string, size: string, quantity: number}[]>([]);
   const [isFavOpen, setIsFavOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<'favorites' | 'locator'>('favorites');
-  const [checkoutStep, setCheckoutStep] = useState<'cart' | 'leadCapture' | 'stateSelect' | 'citySelect' | 'resellerSelect'>('cart');
+  const [checkoutStep, setCheckoutStep] = useState<'cart' | 'leadCapture' | 'stateSelect' | 'resellerSelect'>('cart');
   const [leadCode, setLeadCode] = useState({ name: '', phone: '' });
   const [selectedStateStr, setSelectedStateStr] = useState<string>('');
-  const [selectedCityStr, setSelectedCityStr] = useState<string>('');
   const [resellersLocal, setResellersLocal] = useState<Reseller[]>([]);
   const [productsLocal, setProductsLocal] = useState<Product[]>([]);
   const [categoriesLocal, setCategoriesLocal] = useState<ProductCategory[]>([]);
@@ -58,14 +50,24 @@ export default function App() {
   const totalItems = favorites.reduce((acc, curr) => acc + curr.quantity, 0);
 
   useEffect(() => {
-    setResellersLocal(getResellers());
-    setProductsLocal(getProducts());
-    const cats = getCategories();
-    setCategoriesLocal(cats);
-    if (!activeCategory && cats.length > 0) {
-      setActiveCategory(cats[0]);
-    }
+    let mounted = true;
+    const load = async () => {
+      const res = await getResellers();
+      const prods = await getProducts();
+      const cats = await getCategories();
+      if (mounted) {
+        setResellersLocal(res);
+        setProductsLocal(prods);
+        setCategoriesLocal(cats);
+        if (!activeCategory && cats.length > 0) {
+          setActiveCategory(cats[0]);
+        }
+      }
+    };
+    load();
+    return () => { mounted = false; };
   }, [viewState]);
+
 
   const getCategoryCountStr = (catId: string) => {
     const count = productsLocal.filter(p => p.categoryId === catId).length;
@@ -73,7 +75,7 @@ export default function App() {
   };
 
   const getCategoryItemsStr = (catId: string) => {
-    const types = Array.from(new Set(productsLocal.filter(p => p.categoryId === catId).map(p => p.type)));
+    const types = Array.from(new Set(productsLocal.filter(p => p.categoryId === catId).map(p => p.type).filter(Boolean)));
     return types.join(', ');
   };
 
@@ -82,27 +84,25 @@ export default function App() {
     setTimeout(() => {
       setCheckoutStep('cart');
       setSelectedStateStr('');
-      setSelectedCityStr('');
     }, 300);
   };
 
-  const availableStates = Array.from(new Set(resellersLocal.map(r => r.state)));
-  const availableCities = Array.from(new Set(resellersLocal.filter(r => r.state === selectedStateStr).map(r => r.city)));
+  const availableStates: string[] = Array.from(new Set(resellersLocal.map(r => r.state)));
 
   const handleStateClick = (st: string) => {
     setSelectedStateStr(st);
-    setCheckoutStep('citySelect');
-  };
-
-  const handleCityClick = (city: string) => {
-    setSelectedCityStr(city);
     setCheckoutStep('resellerSelect');
   };
 
   const openLocator = (e: React.MouseEvent) => {
     e.preventDefault();
     setDrawerMode('locator');
-    setCheckoutStep('stateSelect');
+    if (availableStates.length === 1) {
+      setSelectedStateStr(availableStates[0]);
+      setCheckoutStep('resellerSelect');
+    } else {
+      setCheckoutStep('stateSelect');
+    }
     setIsFavOpen(true);
   };
 
@@ -129,15 +129,6 @@ export default function App() {
         return prev;
       }
     });
-  };
-
-  const createWhatsAppLink = (phone: string) => {
-    if (totalItems === 0) return '#';
-    let text = 'Olá! Gostaria de encomendar os seguintes produtos:\n\n';
-    favorites.forEach(f => {
-      text += `- ${f.quantity}x ${f.name} - Embalagem ${f.size}\n`;
-    });
-    return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
   };
 
   useEffect(() => {
@@ -194,16 +185,26 @@ export default function App() {
     window.open(`https://wa.me/5516997090967?text=${encodedText}`, '_blank');
   };
 
-  const sendOrderWhatsApp = (name: string, phone: string) => {
-    const defaultPhone = "5516997090967";
-    let text = `*Novo Pedido*\n\n*Cliente:* ${name}\n*Contato:* ${phone}\n\n*Lista de Produtos:*\n`;
+  const sendOrderWhatsApp = (resellerPhone: string) => {
+    let text = `*Novo Pedido*\n\n*Cliente:* ${leadCode.name}\n*Contato:* ${leadCode.phone}\n\n*Lista de Produtos:*\n`;
     favorites.forEach(fav => {
       text += `- ${fav.quantity}x ${fav.name} - Embalagem ${fav.size}\n`;
     });
     
     const encodedText = encodeURIComponent(text);
-    window.open(`https://wa.me/${defaultPhone}?text=${encodedText}`, '_blank');
+    const cleanPhone = resellerPhone.replace(/\D/g, '');
+    const finalPhone = cleanPhone.length <= 11 ? `55${cleanPhone}` : cleanPhone;
+    window.open(`https://wa.me/${finalPhone}?text=${encodedText}`, '_blank');
     closeDrawer();
+  };
+
+  const advanceFromLeadToLocator = () => {
+    if (availableStates.length === 1) {
+      setSelectedStateStr(availableStates[0]);
+      setCheckoutStep('resellerSelect');
+    } else {
+      setCheckoutStep('stateSelect');
+    }
   };
 
   const handleLeadSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -239,7 +240,7 @@ export default function App() {
             longitude,
             city
           });
-          sendOrderWhatsApp(leadCode.name, leadCode.phone);
+          advanceFromLeadToLocator();
         },
         (error) => {
           addClient({
@@ -249,7 +250,7 @@ export default function App() {
             latitude: null,
             longitude: null
           });
-          sendOrderWhatsApp(leadCode.name, leadCode.phone);
+          advanceFromLeadToLocator();
         }
       );
     } else {
@@ -260,7 +261,7 @@ export default function App() {
         latitude: null,
         longitude: null
       });
-      sendOrderWhatsApp(leadCode.name, leadCode.phone);
+      advanceFromLeadToLocator();
     }
   };
 
@@ -279,11 +280,8 @@ export default function App() {
             {checkoutStep === 'leadCapture' && (
               <h3><ShoppingBag color="#d32f2f" size={20} style={{marginRight: '8px'}} /> Detalhes do Pedido</h3>
             )}
-            {checkoutStep === 'citySelect' && (
-              <h3><MapPin color="#d32f2f" size={20} style={{marginRight: '8px'}} /> Escolha a cidade</h3>
-            )}
             {checkoutStep === 'resellerSelect' && (
-              <h3><Store color="#d32f2f" size={20} style={{marginRight: '8px'}} /> Lojas em {selectedCityStr}</h3>
+              <h3><Store color="#d32f2f" size={20} style={{marginRight: '8px'}} /> Lojas Parceiras</h3>
             )}
             <button className="close-btn" onClick={closeDrawer}><X size={24} /></button>
           </div>
@@ -339,7 +337,7 @@ export default function App() {
                     />
                   </div>
                   <button type="submit" className="btn btn-whatsapp-order" style={{ width: '100%', marginBottom: '15px' }}>
-                    Concluir e Enviar Pedido
+                    Concluir e Selecionar Revenda
                   </button>
                   <button type="button" className="btn-link" onClick={() => setCheckoutStep('cart')} style={{ width: '100%', textAlign: 'center' }}>
                     Voltar para meus itens
@@ -368,41 +366,36 @@ export default function App() {
               </div>
             )}
 
-            {checkoutStep === 'citySelect' && (
-              <div className="state-select-container">
-                <p className="state-instruction">Temos parceiros nestas cidades em {selectedStateStr}:</p>
-                <div className="cities-grid" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {availableCities.map(city => (
-                    <button key={city} onClick={() => handleCityClick(city)} style={{ padding: '15px', background: '#f5f0e0', border: '1px solid #e0d5b0', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontWeight: 600, color: '#333', textAlign: 'left', display: 'flex', justifyContent: 'space-between' }}>
-                      {city} <ChevronRight size={20} color="#8B4513" />
-                    </button>
-                  ))}
-                </div>
-                <button className="btn-link" onClick={() => setCheckoutStep('stateSelect')} style={{marginTop: '20px', width: '100%', textAlign: 'center'}}>Trocar Estado</button>
-              </div>
-            )}
-
             {checkoutStep === 'resellerSelect' && (
               <div className="reseller-select-container">
                 <div className="resellers-list">
-                  {resellersLocal.filter(r => r.state === selectedStateStr && r.city === selectedCityStr).map((r, i) => (
+                  {resellersLocal.filter(r => r.state === selectedStateStr).map((r, i) => (
                     <div key={r.id} className="reseller-card">
                       <div className="reseller-info">
                         <h4>{r.name}</h4>
+                        <span style={{ display: 'inline-block', background: '#FFFDD0', color: '#8B4513', padding: '4px 10px', borderRadius: '12px', fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>{r.city} - {r.state}</span>
                         <p className="reseller-address">{r.address}</p>
                       </div>
                       <div className="reseller-actions" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '15px' }}>
                         <a href={r.googleMapsLink} target="_blank" rel="noreferrer" className="btn-whatsapp-reseller" style={{ background: '#f8f4e8', color: '#8B4513', border: '1px solid #e0d5b0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                           <Navigation size={18} /> Ver no Mapa
                         </a>
-                        <a href={createWhatsAppLink(r.phone)} target="_blank" rel="noreferrer" className="btn-whatsapp-reseller" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                          Fazer Pedido
-                        </a>
+                        {drawerMode === 'locator' ? (
+                          <button onClick={() => { closeDrawer(); document.getElementById('produtos')?.scrollIntoView({ behavior: 'smooth' }); }} className="btn-whatsapp-reseller" style={{ border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                            Fazer Pedido
+                          </button>
+                        ) : (
+                          <button onClick={() => sendOrderWhatsApp(r.phone)} className="btn-whatsapp-reseller" style={{ border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: '#25D366' }}>
+                            Enviar Pedido
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
                 </div>
-                <button className="btn-link" onClick={() => setCheckoutStep('citySelect')} style={{marginTop: '20px', width: '100%', textAlign: 'center'}}>Trocar Cidade</button>
+                {availableStates.length > 1 && (
+                  <button className="btn-link" onClick={() => setCheckoutStep('stateSelect')} style={{marginTop: '20px', width: '100%', textAlign: 'center'}}>Trocar Estado</button>
+                )}
               </div>
             )}
             
@@ -458,6 +451,7 @@ export default function App() {
             favorites={favorites}
             updateQuantity={updateQuantity}
             setIsFavOpen={openFavoritesMenu}
+            isFavOpen={isFavOpen}
           />
           {renderFavDrawer()}
         </>
@@ -550,7 +544,7 @@ export default function App() {
         <div className="container">
           <div className="about-grid">
             <div className="about-image fade-in">
-              <img src="https://i.imgur.com/KToueM6.jpeg" alt="Chef da Shiva Parvati preparando pratos artesanais" loading="lazy" />
+              <img src="https://i.imgur.com/KToueM6.jpeg" alt="Chef da Shiva Parvati preparando pratos artesanais" loading="lazy" referrerPolicy="no-referrer" />
               <p className="chef-name">Chefe: Erika Contrera</p>
             </div>
             <div className="about-text fade-in">
@@ -586,7 +580,7 @@ export default function App() {
             {activeCategory && (
               <div className="product-display fade-in visible">
                 <div className="product-image-wrapper">
-                  <img src={activeCategory.image} alt={`Categoria ${activeCategory.title}`} className="product-main-image" loading="lazy" />
+                  <img src={activeCategory.image} alt={`Categoria ${activeCategory.title}`} className="product-main-image" loading="lazy" referrerPolicy="no-referrer" />
                   <div className="product-badge">{getCategoryCountStr(activeCategory.id)}</div>
                 </div>
                 <div className="product-details">
@@ -741,6 +735,49 @@ export default function App() {
           <p>CNPJ: 04.897.139/0001-30 | Microempresa (ME) <a href="#" onClick={(e) => { e.preventDefault(); setViewState('admin'); }} style={{color: 'inherit', marginLeft: '10px', textDecoration: 'underline'}}>Área do Lojista/Admin</a></p>
         </div>
       </footer>
+      {!isFavOpen && totalItems > 0 && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#d32f2f',
+          color: '#FFF',
+          padding: '16px 24px',
+          borderRadius: '30px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px',
+          boxShadow: '0 10px 25px rgba(211, 47, 47, 0.4)',
+          zIndex: 1500,
+          animation: 'slideUp 0.3s ease-out'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ShoppingBag size={24} />
+            <span style={{ fontWeight: 600, fontSize: '15px' }}>{totalItems} {totalItems === 1 ? 'item' : 'itens'} na lista</span>
+          </div>
+          <button 
+            onClick={() => {
+              setDrawerMode('favorites');
+              setIsFavOpen(true);
+            }}
+            style={{
+              background: '#FFF',
+              color: '#d32f2f',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '20px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              textTransform: 'uppercase',
+              fontSize: '13px',
+              transition: 'transform 0.2s',
+            }}
+          >
+            Finalizar Pedido
+          </button>
+        </div>
+      )}
       {renderFavDrawer()}
     </>
   );

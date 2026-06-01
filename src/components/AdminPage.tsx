@@ -3,13 +3,53 @@ import { getResellers, addReseller, updateReseller, deleteReseller, Reseller } f
 import { getAdminUsers, saveAdminUsers, AdminUser } from '../services/auth';
 import { getProducts, addProduct, updateProduct, deleteProduct, Product } from '../services/products';
 import { getClients, updateClient, deleteClient, Client } from '../services/clients';
-import { ChevronLeft, Edit, Trash2, LogOut, Users, MapPin, Eye, EyeOff, Package, Layers } from 'lucide-react';
+import { ChevronLeft, Edit, Trash2, LogOut, Users, MapPin, Eye, EyeOff, Package, Layers, Download } from 'lucide-react';
 import AdminAuth from './AdminAuth';
 import { getCategories, addCategory, updateCategory, deleteCategory, ProductCategory } from '../services/categories';
+
+const brazilStates = [
+  { abbr: 'AC', name: 'Acre' },
+  { abbr: 'AL', name: 'Alagoas' },
+  { abbr: 'AP', name: 'Amapá' },
+  { abbr: 'AM', name: 'Amazonas' },
+  { abbr: 'BA', name: 'Bahia' },
+  { abbr: 'CE', name: 'Ceará' },
+  { abbr: 'DF', name: 'Distrito Federal' },
+  { abbr: 'ES', name: 'Espírito Santo' },
+  { abbr: 'GO', name: 'Goiás' },
+  { abbr: 'MA', name: 'Maranhão' },
+  { abbr: 'MT', name: 'Mato Grosso' },
+  { abbr: 'MS', name: 'Mato Grosso do Sul' },
+  { abbr: 'MG', name: 'Minas Gerais' },
+  { abbr: 'PA', name: 'Pará' },
+  { abbr: 'PB', name: 'Paraíba' },
+  { abbr: 'PR', name: 'Paraná' },
+  { abbr: 'PE', name: 'Pernambuco' },
+  { abbr: 'PI', name: 'Piauí' },
+  { abbr: 'RJ', name: 'Rio de Janeiro' },
+  { abbr: 'RN', name: 'Rio Grande do Norte' },
+  { abbr: 'RS', name: 'Rio Grande do Sul' },
+  { abbr: 'RO', name: 'Rondônia' },
+  { abbr: 'RR', name: 'Roraima' },
+  { abbr: 'SC', name: 'Santa Catarina' },
+  { abbr: 'SP', name: 'São Paulo' },
+  { abbr: 'SE', name: 'Sergipe' },
+  { abbr: 'TO', name: 'Tocantins' }
+];
 
 export default function AdminPage({ onBack }: { onBack: () => void }) {
   const [loggedInUser, setLoggedInUser] = useState<AdminUser | null>(null);
   const [activeTab, setActiveTab] = useState<'resellers' | 'users' | 'products' | 'categories' | 'clientes'>('resellers');
+  
+  const exportToTxt = (filename: string, content: string) => {
+    const link = document.createElement('a');
+    const file = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    link.href = URL.createObjectURL(file);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
   
   // Resellers State
   const [resellers, setResellers] = useState<Reseller[]>([]);
@@ -31,7 +71,7 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
   // Products State
   const [products, setProducts] = useState<Product[]>([]);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
-  const [productCatFilter, setProductCatFilter] = useState('massas');
+  const [productCatFilter, setProductCatFilter] = useState('todos');
   const [productFormData, setProductFormData] = useState<Omit<Product, 'id'>>({
     categoryId: 'massas', name: '', type: '', embalagem: []
   });
@@ -51,13 +91,16 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
 
   useEffect(() => {
     if (loggedInUser) {
-      setResellers(getResellers());
-      setProducts(getProducts());
-      setCategories(getCategories());
-      if (loggedInUser.isMaster) {
-        setAdminUsers(getAdminUsers());
-        setClients(getClients());
-      }
+      const load = async () => {
+        setResellers(await getResellers());
+        setProducts(await getProducts());
+        setCategories(await getCategories());
+        if (loggedInUser.isMaster) {
+          setAdminUsers(await getAdminUsers());
+          setClients(await getClients());
+        }
+      };
+      load();
     }
   }, [loggedInUser]);
 
@@ -66,14 +109,14 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
     return regex.test(pwd);
   };
 
-  const handleSaveReseller = (e: React.FormEvent) => {
+  const handleSaveReseller = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingId) {
-      updateReseller({ ...formData, id: editingId });
+      await updateReseller({ ...formData, id: editingId });
     } else {
-      addReseller(formData);
+      await addReseller(formData);
     }
-    setResellers(getResellers());
+    setResellers(await getResellers());
     setEditingId(null);
     setFormData({ state: '', stateName: '', city: '', name: '', address: '', googleMapsLink: '', phone: '' });
   };
@@ -83,39 +126,20 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
     setFormData(r);
   };
 
-  const handleDeleteReseller = (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir esta revenda?')) {
-      deleteReseller(id);
-      setResellers(getResellers());
-    }
+  const handleDeleteReseller = async (id: string) => {
+    await deleteReseller(id);
+    setResellers(await getResellers());
   };
 
   // --- Users Handlers ---
-  const handleSaveUser = (e: React.FormEvent) => {
+  const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setUserErrorMsg('');
     
-    // Only validate password constraint if creating a new user or explicitly changing password
-    if (!editingUserId || userFormData.passwordStr) {
-      if (userFormData.passwordStr !== userFormData.confirmPasswordStr) {
-        setUserErrorMsg('As senhas não coincidem.');
-        return;
-      }
-      if (!validatePassword(userFormData.passwordStr)) {
-        setUserErrorMsg('A senha deve conter no mínimo 8 caracteres, letras, números e símbolos.');
-        return;
-      }
-    }
-    
-    let allUsers = getAdminUsers();
+    // Check master constraint etc
+    let allUsers = await getAdminUsers();
     
     if (editingUserId) {
-      // check email unique
-      const existing = allUsers.find(u => u.email === userFormData.email && u.id !== editingUserId);
-      if (existing) {
-        setUserErrorMsg('Este e-mail já está em uso.');
-        return;
-      }
       const idx = allUsers.findIndex(u => u.id === editingUserId);
       if (idx >= 0) {
         const uToSave = { ...userFormData, id: editingUserId };
@@ -126,17 +150,12 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
         allUsers[idx] = uToSave as AdminUser;
       }
     } else {
-      const existing = allUsers.find(u => u.email === userFormData.email);
-      if (existing) {
-        setUserErrorMsg('Este e-mail já está em uso.');
-        return;
-      }
       const newUser = { ...userFormData, id: Date.now().toString() };
       delete newUser.confirmPasswordStr;
       allUsers.push(newUser as AdminUser);
     }
     
-    saveAdminUsers(allUsers);
+    await saveAdminUsers(allUsers);
     setAdminUsers(allUsers);
     setEditingUserId(null);
     setUserFormData({ name: '', email: '', phone: '', passwordStr: '', isMaster: false, confirmPasswordStr: '' });
@@ -147,33 +166,31 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
     setUserFormData({ name: u.name, email: u.email, phone: u.phone, passwordStr: '', isMaster: u.isMaster, confirmPasswordStr: '' });
   };
 
-  const handleDeleteUser = (id: string) => {
+  const handleDeleteUser = async (id: string) => {
     if (id === loggedInUser?.id) {
-      alert('Você não pode excluir a si mesmo.');
+      // Cannot delete self
       return;
     }
-    if (window.confirm('Excluir este usuário permanentemente?')) {
-      let allUsers = getAdminUsers();
-      allUsers = allUsers.filter(u => u.id !== id);
-      saveAdminUsers(allUsers);
-      setAdminUsers(allUsers);
-    }
+    let allUsers = await getAdminUsers();
+    allUsers = allUsers.filter(u => u.id !== id);
+    await saveAdminUsers(allUsers);
+    setAdminUsers(allUsers);
   };
 
   // --- Products Handlers ---
-  const handleSaveProduct = (e: React.FormEvent) => {
+  const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     const embalagemArray = embalagemStr.split(',').map(s => s.trim()).filter(s => s.length > 0);
     const prodToSave = { ...productFormData, embalagem: embalagemArray };
     
     if (editingProductId) {
-      updateProduct({ ...prodToSave, id: editingProductId });
+      await updateProduct({ ...prodToSave, id: editingProductId });
     } else {
-      addProduct(prodToSave);
+      await addProduct(prodToSave);
     }
-    setProducts(getProducts());
+    setProducts(await getProducts());
     setEditingProductId(null);
-    setProductFormData({ categoryId: productCatFilter, name: '', type: '', embalagem: [] });
+    setProductFormData({ categoryId: productCatFilter === 'todos' ? categories[0]?.id || 'massas' : productCatFilter, name: '', type: '', embalagem: [] });
     setEmbalagemStr('');
   };
 
@@ -184,22 +201,20 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
     setProductCatFilter(p.categoryId);
   };
 
-  const handleDeleteProduct = (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir este produto?')) {
-      deleteProduct(id);
-      setProducts(getProducts());
-    }
+  const handleDeleteProduct = async (id: string) => {
+    await deleteProduct(id);
+    setProducts(await getProducts());
   };
 
   // --- Categories Handlers ---
-  const handleSaveCategory = (e: React.FormEvent) => {
+  const handleSaveCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingCatId) {
-      updateCategory({ ...catFormData, id: editingCatId });
+      await updateCategory({ ...catFormData, id: editingCatId });
     } else {
-      addCategory(catFormData);
+      await addCategory(catFormData);
     }
-    setCategories(getCategories());
+    setCategories(await getCategories());
     setEditingCatId(null);
     setCatFormData({ title: '', image: '' });
   };
@@ -209,19 +224,15 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
     setCatFormData({ title: c.title, image: c.image });
   };
 
-  const handleDeleteCategory = (id: string) => {
-    if (window.confirm('Atenção: Excluir uma linha de produtos não exclui os produtos dentro dela. Tem certeza?')) {
-      deleteCategory(id);
-      setCategories(getCategories());
-      setProducts(getProducts()); // optional refresh
-    }
+  const handleDeleteCategory = async (id: string) => {
+    await deleteCategory(id);
+    setCategories(await getCategories());
+    setProducts(await getProducts());
   };
 
-  const handleDeleteClient = (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir este cliente?')) {
-      deleteClient(id);
-      setClients(getClients());
-    }
+  const handleDeleteClient = async (id: string) => {
+    await deleteClient(id);
+    setClients(await getClients());
   };
 
   const startEditClient = (c: Client) => {
@@ -229,15 +240,16 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
     setClientFormData({ name: c.name, phone: c.phone });
   };
 
-  const handleSaveClient = (e: React.FormEvent, id: string) => {
+  const handleSaveClient = async (e: React.FormEvent, id: string) => {
     e.preventDefault();
     const c = clients.find(client => client.id === id);
     if (c) {
-      updateClient({ ...c, name: clientFormData.name, phone: clientFormData.phone });
-      setClients(getClients());
+      await updateClient({ ...c, name: clientFormData.name, phone: clientFormData.phone });
+      setClients(await getClients());
       setEditingClientId(null);
     }
   };
+
 
   if (!loggedInUser) {
     return <AdminAuth onLogin={setLoggedInUser} onBack={onBack} />;
@@ -302,12 +314,25 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
                 <h3 style={{ marginBottom: '20px', color: '#1A1A1A' }}>{editingId ? 'Editar Parceiro' : 'Novo Parceiro'}</h3>
                 <form onSubmit={handleSaveReseller} className="admin-form" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   <div className="form-group">
-                    <label>Estado (Sigla - Ex: SP)</label>
-                    <input required value={formData.state} onChange={e => setFormData({...formData, state: e.target.value.toUpperCase()})} maxLength={2} placeholder="SP" style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
-                  </div>
-                  <div className="form-group">
-                    <label>Nome do Estado</label>
-                    <input required value={formData.stateName} onChange={e => setFormData({...formData, stateName: e.target.value})} placeholder="São Paulo" style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
+                    <label>Estado</label>
+                    <select 
+                      required 
+                      value={formData.state} 
+                      onChange={e => {
+                        const selectedState = brazilStates.find(s => s.abbr === e.target.value);
+                        if (selectedState) {
+                          setFormData({...formData, state: selectedState.abbr, stateName: selectedState.name});
+                        } else {
+                          setFormData({...formData, state: '', stateName: ''});
+                        }
+                      }}
+                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }}
+                    >
+                      <option value="" disabled hidden>Selecione um Estado...</option>
+                      {brazilStates.map(st => (
+                        <option key={st.abbr} value={st.abbr}>{st.name} ({st.abbr})</option>
+                      ))}
+                    </select>
                   </div>
                   <div className="form-group">
                     <label>Cidade</label>
@@ -337,8 +362,24 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
               </div>
 
               <div className="admin-list-panel">
-                <h3 style={{ marginBottom: '20px', color: '#1A1A1A' }}>Parceiros Cadastrados</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                  <h3 style={{ margin: 0, color: '#1A1A1A' }}>Parceiros Cadastrados</h3>
+                  <button 
+                    onClick={() => {
+                      const sorted = [...resellers].sort((a, b) => {
+                        const local = a.city.localeCompare(b.city);
+                        if (local !== 0) return local;
+                        return a.name.localeCompare(b.name);
+                      });
+                      const txt = sorted.map(r => `Cidade: ${r.city} / ${r.state}\nNome: ${r.name}\nEndereço: ${r.address}\nTelefone: ${r.phone}\n--------------------------------`).join('\n\n');
+                      exportToTxt('parceiros.txt', txt);
+                    }}
+                    style={{ background: 'none', border: '1px solid #ccc', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}
+                  >
+                    <Download size={16} /> Exportar TXT
+                  </button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', maxHeight: '600px', overflowY: 'auto', paddingRight: '5px' }}>
                   {resellers.length === 0 && <p style={{ color: '#666' }}>Nenhum parceiro cadastrado.</p>}
                   {resellers.map(r => (
                     <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f9f9f9', padding: '15px', borderRadius: '8px', border: '1px solid #eee' }}>
@@ -385,7 +426,7 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
                   <button type="submit" className="btn btn-secondary" style={{ width: '100%', marginTop: '10px' }}>
                     {editingProductId ? 'Salvar Alterações' : 'Cadastrar Produto'}
                   </button>
-                  {editingProductId && <button type="button" className="btn-link" onClick={() => { setEditingProductId(null); setProductFormData({categoryId: productCatFilter, name: '', type: '', embalagem: []}); setEmbalagemStr(''); }} style={{ width: '100%', textAlign: 'center', marginTop: '10px' }}>Cancelar Edição</button>}
+                  {editingProductId && <button type="button" className="btn-link" onClick={() => { setEditingProductId(null); setProductFormData({categoryId: productCatFilter === 'todos' ? categories[0]?.id || 'massas' : productCatFilter, name: '', type: '', embalagem: []}); setEmbalagemStr(''); }} style={{ width: '100%', textAlign: 'center', marginTop: '10px' }}>Cancelar Edição</button>}
                 </form>
               </div>
 
@@ -393,8 +434,21 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                   <h3 style={{ margin: 0, color: '#1A1A1A' }}>Produtos Cadastrados</h3>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <button 
+                      onClick={() => {
+                        const filtered = products.filter(p => productCatFilter === 'todos' || p.categoryId === productCatFilter);
+                        const sorted = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
+                        const getCatName = (id: string) => categories.find(c => c.id === id)?.title || id;
+                        const txt = sorted.map(p => `Linha: ${getCatName(p.categoryId)}\nProduto: ${p.name}\nTipo: ${p.type}\nEmbalagens: ${p.embalagem.join(', ')}\n--------------------------------`).join('\n\n');
+                        exportToTxt('produtos.txt', txt);
+                      }}
+                      style={{ background: 'none', border: '1px solid #ccc', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}
+                    >
+                      <Download size={16} /> Exportar TXT
+                    </button>
                     <span style={{ fontSize: '14px', color: '#666' }}>Filtrar Linha:</span>
                     <select value={productCatFilter} onChange={e => setProductCatFilter(e.target.value)} style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #ccc', fontSize: '14px' }}>
+                      <option value="todos">Todas as linhas</option>
                       {categories.map(c => (
                         <option key={c.id} value={c.id}>{c.title}</option>
                       ))}
@@ -402,11 +456,21 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
                   </div>
                 </div>
                 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                  {products.filter(p => p.categoryId === productCatFilter).length === 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', maxHeight: '600px', overflowY: 'auto', paddingRight: '5px' }}>
+                  {products.filter(p => productCatFilter === 'todos' || p.categoryId === productCatFilter).length === 0 && (
                     <p style={{ color: '#666' }}>Nenhum produto cadastrado nesta linha.</p>
                   )}
-                  {products.filter(p => p.categoryId === productCatFilter).map(p => (
+                  {products.filter(p => productCatFilter === 'todos' || p.categoryId === productCatFilter).sort((a, b) => {
+                    const order = ['massas', 'pizzas', 'tortas', 'molhos', 'caldos', 'diversos'];
+                    const getOrderIndex = (cat: any) => {
+                      const categoryId = cat.categoryId ? String(cat.categoryId).toLowerCase() : '';
+                      for (let i = 0; i < order.length; i++) {
+                        if (categoryId.includes(order[i])) return i;
+                      }
+                      return 999;
+                    };
+                    return getOrderIndex(a) - getOrderIndex(b);
+                  }).map(p => (
                     <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f9f9f9', padding: '15px', borderRadius: '8px', border: '1px solid #eee' }}>
                       <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
@@ -447,13 +511,25 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
               </div>
 
               <div className="admin-list-panel">
-                <h3 style={{ marginBottom: '20px', color: '#1A1A1A' }}>Linhas de Produtos Cadastradas</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                  <h3 style={{ margin: 0, color: '#1A1A1A' }}>Linhas de Produtos Cadastradas</h3>
+                  <button 
+                    onClick={() => {
+                      const sorted = [...categories].sort((a, b) => a.title.localeCompare(b.title));
+                      const txt = sorted.map(c => `ID / Chave: ${c.id}\nNome da Linha: ${c.title}\n--------------------------------`).join('\n\n');
+                      exportToTxt('linhas_de_produtos.txt', txt);
+                    }}
+                    style={{ background: 'none', border: '1px solid #ccc', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}
+                  >
+                    <Download size={16} /> Exportar TXT
+                  </button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', maxHeight: '600px', overflowY: 'auto', paddingRight: '5px' }}>
                   {categories.length === 0 && <p style={{ color: '#666' }}>Nenhuma linha cadastrada.</p>}
                   {categories.map(c => (
                     <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f9f9f9', padding: '15px', borderRadius: '8px', border: '1px solid #eee' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flex: 1 }}>
-                        <img src={c.image} alt={c.title} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px' }} />
+                        <img src={c.image} alt={c.title} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px' }} referrerPolicy="no-referrer" />
                         <strong style={{ fontSize: '16px', color: '#1A1A1A' }}>{c.title}</strong>
                       </div>
                       <div style={{ display: 'flex', gap: '10px', marginLeft: '15px' }}>
@@ -550,8 +626,20 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
 
           {activeTab === 'clientes' && loggedInUser.isMaster && (
             <div className="admin-content" style={{ display: 'block' }}>
-              <h3 style={{ marginBottom: '20px', color: '#1A1A1A' }}>Gestão de Clientes (Leads Capturados)</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3 style={{ margin: 0, color: '#1A1A1A' }}>Gestão de Clientes (Leads Capturados)</h3>
+                <button 
+                  onClick={() => {
+                    const sorted = [...clients].sort((a, b) => a.name.localeCompare(b.name));
+                    const txt = sorted.map(c => `Data: ${new Date(c.createdAt).toLocaleDateString()} ${new Date(c.createdAt).toLocaleTimeString()}\nNome: ${c.name}\nWhatsApp: ${c.phone}\n--------------------------------`).join('\n\n');
+                    exportToTxt('clientes_leads.txt', txt);
+                  }}
+                  style={{ background: 'none', border: '1px solid #ccc', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}
+                >
+                  <Download size={16} /> Exportar TXT
+                </button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', maxHeight: '600px', overflowY: 'auto', paddingRight: '5px' }}>
                 {clients.length === 0 && <p style={{ color: '#666' }}>Nenhum lead capturado ainda.</p>}
                 {clients.map(c => (
                   <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f9f9f9', padding: '15px', borderRadius: '8px', border: '1px solid #eee' }}>
