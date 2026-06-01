@@ -13,13 +13,6 @@ import image2 from './assets/images/lasanha_rucula_tomate_1779487887471.png';
 import image3 from './assets/images/sorrentino_queijo_1779487902156.png';
 import image4 from './assets/images/sufioli_queijo_nozes_1779487916700.png';
 
-import catMassas from './assets/images/rondelli_bolonhesa_1779487429390.png';
-import catPizzas from './assets/images/pizza_artesanal_1779498365848.png';
-import catTortas from './assets/images/torta_salgada_1779498396152.png';
-import catMolhos from './assets/images/molhos_artesanais_1779498411741.png';
-import catCaldos from './assets/images/caldos_cremes_1779498426041.png';
-import catDiversos from './assets/images/diversos_paes_doces_1779498440884.png';
-
 const heroSlides = [
   {
     image: image1,

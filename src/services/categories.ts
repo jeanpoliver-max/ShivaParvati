@@ -1,11 +1,5 @@
 import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import catMassas from '../assets/images/rondelli_bolonhesa_1779487429390.png';
-import catPizzas from '../assets/images/pizza_artesanal_1779498365848.png';
-import catTortas from '../assets/images/torta_salgada_1779498396152.png';
-import catMolhos from '../assets/images/molhos_artesanais_1779498411741.png';
-import catCaldos from '../assets/images/caldos_cremes_1779498426041.png';
-import catDiversos from '../assets/images/diversos_paes_doces_1779498440884.png';
 
 export interface ProductCategory {
   id: string;
@@ -22,12 +16,12 @@ export async function getCategories(): Promise<ProductCategory[]> {
     const docs = snapshot.docs.map(doc => {
       const data = { id: doc.id, ...doc.data() } as ProductCategory;
       const titleLower = (data.title || '').toLowerCase();
-      if (titleLower.includes('massas')) data.image = 'https://imgur.com/DBYlaZy.png';
-      else if (titleLower.includes('pizzas')) data.image = 'https://imgur.com/Pyx1ruw.png';
-      else if (titleLower.includes('tortas')) data.image = 'https://imgur.com/Ja880kG.png';
-      else if (titleLower.includes('molhos')) data.image = 'https://imgur.com/5OsSKQt.png';
-      else if (titleLower.includes('caldos')) data.image = 'https://imgur.com/KwVS48e.png';
-      else if (titleLower.includes('diversos')) data.image = 'https://imgur.com/f0Vr0rR.png';
+      if (titleLower.includes('massas')) data.image = 'https://i.imgur.com/DBYlaZy.png';
+      else if (titleLower.includes('pizzas')) data.image = 'https://i.imgur.com/Pyx1ruw.png';
+      else if (titleLower.includes('tortas')) data.image = 'https://i.imgur.com/Ja880kG.png';
+      else if (titleLower.includes('molhos')) data.image = 'https://i.imgur.com/5OsSKQt.png';
+      else if (titleLower.includes('caldos')) data.image = 'https://i.imgur.com/KwVS48e.png';
+      else if (titleLower.includes('diversos')) data.image = 'https://i.imgur.com/f0Vr0rR.png';
       return data;
     });
     docs.sort((a, b) => {
