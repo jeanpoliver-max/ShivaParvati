@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [producao]
+    branches: [producao] # Acorda toda vez que a branch producao receber a cópia da main
 
 permissions:
   contents: read
