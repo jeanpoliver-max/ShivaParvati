@@ -544,7 +544,7 @@ export default function App() {
         <div className="container">
           <div className="about-grid">
             <div className="about-image fade-in">
-              <img src="https://i.imgur.com/KToueM6.jpeg" alt="Chef da Shiva Parvati preparando pratos artesanais" loading="lazy" />
+              <img src="https://i.imgur.com/KToueM6.jpeg" alt="Chef da Shiva Parvati preparando pratos artesanais" loading="lazy" referrerPolicy="no-referrer" />
               <p className="chef-name">Chefe: Erika Contrera</p>
             </div>
             <div className="about-text fade-in">
@@ -580,7 +580,7 @@ export default function App() {
             {activeCategory && (
               <div className="product-display fade-in visible">
                 <div className="product-image-wrapper">
-                  <img src={activeCategory.image} alt={`Categoria ${activeCategory.title}`} className="product-main-image" loading="lazy" />
+                  <img src={activeCategory.image} alt={`Categoria ${activeCategory.title}`} className="product-main-image" loading="lazy" referrerPolicy="no-referrer" />
                   <div className="product-badge">{getCategoryCountStr(activeCategory.id)}</div>
                 </div>
                 <div className="product-details">

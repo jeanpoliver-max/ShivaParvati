@@ -529,7 +529,7 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
                   {categories.map(c => (
                     <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f9f9f9', padding: '15px', borderRadius: '8px', border: '1px solid #eee' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flex: 1 }}>
-                        <img src={c.image} alt={c.title} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px' }} />
+                        <img src={c.image} alt={c.title} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px' }} referrerPolicy="no-referrer" />
                         <strong style={{ fontSize: '16px', color: '#1A1A1A' }}>{c.title}</strong>
                       </div>
                       <div style={{ display: 'flex', gap: '10px', marginLeft: '15px' }}>
