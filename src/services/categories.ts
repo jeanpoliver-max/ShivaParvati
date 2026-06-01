@@ -19,7 +19,17 @@ export async function getCategories(): Promise<ProductCategory[]> {
   try {
     const snapshot = await getDocs(getCollection());
     const order = ['massas', 'pizzas', 'tortas', 'molhos', 'caldos', 'diversos'];
-    const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ProductCategory));
+    const docs = snapshot.docs.map(doc => {
+      const data = { id: doc.id, ...doc.data() } as ProductCategory;
+      const titleLower = (data.title || '').toLowerCase();
+      if (titleLower.includes('massas')) data.image = 'https://imgur.com/DBYlaZy.png';
+      else if (titleLower.includes('pizzas')) data.image = 'https://imgur.com/Pyx1ruw.png';
+      else if (titleLower.includes('tortas')) data.image = 'https://imgur.com/Ja880kG.png';
+      else if (titleLower.includes('molhos')) data.image = 'https://imgur.com/5OsSKQt.png';
+      else if (titleLower.includes('caldos')) data.image = 'https://imgur.com/KwVS48e.png';
+      else if (titleLower.includes('diversos')) data.image = 'https://imgur.com/f0Vr0rR.png';
+      return data;
+    });
     docs.sort((a, b) => {
       const getOrderIndex = (cat: any) => {
         const title = cat.title ? String(cat.title).toLowerCase() : '';
