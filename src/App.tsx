@@ -599,7 +599,7 @@ export default function App() {
             {activeCategory && (
               <div className="product-display fade-in visible">
                 <div className="product-image-wrapper">
-                  <img src={activeCategory.image} alt={`Categoria ${activeCategory.title}`} className="product-main-image" loading="lazy" referrerPolicy="no-referrer" />
+                  <img src={activeCategory.image} alt={`Produtos alimentícios e massas artesanais da categoria ${activeCategory.title}`} className="product-main-image" loading="lazy" referrerPolicy="no-referrer" />
                   <div className="product-badge">{getCategoryCountStr(activeCategory.id)}</div>
                 </div>
                 <div className="product-details">
