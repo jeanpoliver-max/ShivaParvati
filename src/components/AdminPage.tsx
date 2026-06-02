@@ -379,20 +379,39 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
                     <Download size={16} /> Exportar TXT
                   </button>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', maxHeight: '600px', overflowY: 'auto', paddingRight: '5px' }}>
-                  {resellers.length === 0 && <p style={{ color: '#666' }}>Nenhum parceiro cadastrado.</p>}
-                  {resellers.map(r => (
-                    <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f9f9f9', padding: '15px', borderRadius: '8px', border: '1px solid #eee' }}>
-                      <div>
-                        <strong style={{ fontSize: '16px', color: '#1A1A1A' }}>{r.name}</strong> <span style={{ color: '#888', fontSize: '13px' }}>- {r.city}/{r.state}</span>
-                        <p style={{ margin: '4px 0 0', fontSize: '14px', color: '#555' }}>{r.address}</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxHeight: '600px', overflowY: 'auto', paddingRight: '5px' }}>
+                  {(() => {
+                    if (resellers.length === 0) return <p style={{ color: '#666' }}>Nenhum parceiro cadastrado.</p>;
+                    
+                    const grouped = resellers.reduce((acc, r) => {
+                      const key = `${r.city} - ${r.state}`;
+                      if (!acc[key]) acc[key] = [];
+                      acc[key].push(r);
+                      return acc;
+                    }, {} as Record<string, typeof resellers>);
+
+                    const sortedKeys = Object.keys(grouped).sort();
+
+                    return sortedKeys.map(key => (
+                      <div key={key}>
+                        <h4 style={{ margin: '0 0 10px 0', fontSize: '15px', color: '#888', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>{key}</h4>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                          {grouped[key].sort((a,b) => a.name.localeCompare(b.name)).map(r => (
+                            <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f9f9f9', padding: '15px', borderRadius: '8px', border: '1px solid #eee' }}>
+                              <div>
+                                <strong style={{ fontSize: '16px', color: '#1A1A1A' }}>{r.name}</strong>
+                                <p style={{ margin: '4px 0 0', fontSize: '14px', color: '#555' }}>{r.address}</p>
+                              </div>
+                              <div style={{ display: 'flex', gap: '10px' }}>
+                                <button type="button" onClick={() => startEditReseller(r)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px', color: '#666' }}><Edit size={20} /></button>
+                                <button type="button" onClick={() => handleDeleteReseller(r.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px', color: '#d32f2f' }}><Trash2 size={20} /></button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <div style={{ display: 'flex', gap: '10px' }}>
-                        <button type="button" onClick={() => startEditReseller(r)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px', color: '#666' }}><Edit size={20} /></button>
-                        <button type="button" onClick={() => handleDeleteReseller(r.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px', color: '#d32f2f' }}><Trash2 size={20} /></button>
-                      </div>
-                    </div>
-                  ))}
+                    ));
+                  })()}
                 </div>
               </div>
             </div>

@@ -369,29 +369,48 @@ export default function App() {
             {checkoutStep === 'resellerSelect' && (
               <div className="reseller-select-container">
                 <div className="resellers-list">
-                  {resellersLocal.filter(r => r.state === selectedStateStr).map((r, i) => (
-                    <div key={r.id} className="reseller-card">
-                      <div className="reseller-info">
-                        <h4>{r.name}</h4>
-                        <span style={{ display: 'inline-block', background: '#FFFDD0', color: '#8B4513', padding: '4px 10px', borderRadius: '12px', fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>{r.city} - {r.state}</span>
-                        <p className="reseller-address">{r.address}</p>
+                  {(() => {
+                    const filteredResellers = resellersLocal.filter(r => r.state === selectedStateStr);
+                    const grouped = filteredResellers.reduce((acc, r) => {
+                      const key = r.city;
+                      if (!acc[key]) acc[key] = [];
+                      acc[key].push(r);
+                      return acc;
+                    }, {} as Record<string, typeof resellersLocal>);
+                    
+                    const sortedCities = Object.keys(grouped).sort();
+
+                    return sortedCities.map(city => (
+                      <div key={city}>
+                        <h4 style={{ margin: '15px 0 10px 0', fontSize: '18px', color: '#1A1A1A', borderBottom: '2px solid #eee', paddingBottom: '5px' }}>{city}</h4>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                          {grouped[city].sort((a,b) => a.name.localeCompare(b.name)).map((r, i) => (
+                            <div key={r.id} className="reseller-card" style={{ marginBottom: 0 }}>
+                              <div className="reseller-info">
+                                <h4>{r.name}</h4>
+                                <span style={{ display: 'inline-block', background: '#FFFDD0', color: '#8B4513', padding: '4px 10px', borderRadius: '12px', fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>{r.city} - {r.state}</span>
+                                <p className="reseller-address">{r.address}</p>
+                              </div>
+                              <div className="reseller-actions" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '15px' }}>
+                                <a href={r.googleMapsLink} target="_blank" rel="noreferrer" className="btn-whatsapp-reseller" style={{ background: '#f8f4e8', color: '#8B4513', border: '1px solid #e0d5b0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                  <Navigation size={18} /> Ver no Mapa
+                                </a>
+                                {drawerMode === 'locator' ? (
+                                  <button onClick={() => { closeDrawer(); document.getElementById('produtos')?.scrollIntoView({ behavior: 'smooth' }); }} className="btn-whatsapp-reseller" style={{ border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                    Fazer Pedido
+                                  </button>
+                                ) : (
+                                  <button onClick={() => sendOrderWhatsApp(r.phone)} className="btn-whatsapp-reseller" style={{ border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: '#25D366' }}>
+                                    Enviar Pedido
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <div className="reseller-actions" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '15px' }}>
-                        <a href={r.googleMapsLink} target="_blank" rel="noreferrer" className="btn-whatsapp-reseller" style={{ background: '#f8f4e8', color: '#8B4513', border: '1px solid #e0d5b0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                          <Navigation size={18} /> Ver no Mapa
-                        </a>
-                        {drawerMode === 'locator' ? (
-                          <button onClick={() => { closeDrawer(); document.getElementById('produtos')?.scrollIntoView({ behavior: 'smooth' }); }} className="btn-whatsapp-reseller" style={{ border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                            Fazer Pedido
-                          </button>
-                        ) : (
-                          <button onClick={() => sendOrderWhatsApp(r.phone)} className="btn-whatsapp-reseller" style={{ border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: '#25D366' }}>
-                            Enviar Pedido
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    ));
+                  })()}
                 </div>
                 {availableStates.length > 1 && (
                   <button className="btn-link" onClick={() => setCheckoutStep('stateSelect')} style={{marginTop: '20px', width: '100%', textAlign: 'center'}}>Trocar Estado</button>
