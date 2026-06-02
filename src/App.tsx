@@ -605,7 +605,19 @@ export default function App() {
                 <div className="product-details">
                   <h3>{activeCategory.title}</h3>
                   <p className="product-desc"><strong>Tipos:</strong> {getCategoryItemsStr(activeCategory.id) || 'Variados'}</p>
-                  <button className="btn btn-secondary" onClick={() => setViewState('category')}>Explorar Sabores e Criar Lista de Desejos</button>
+                  
+                  <div style={{ marginTop: '20px', padding: '20px', background: '#faf9f5', borderRadius: '12px', border: '1px dashed #D4AF37', textAlign: 'center' }}>
+                    <p style={{ margin: '0 0 15px 0', color: '#8B4513', fontWeight: 600, fontSize: '16px' }}>
+                      👉 Para escolher os sabores desta categoria:
+                    </p>
+                    <button 
+                      className="btn btn-action-pulse" 
+                      onClick={() => setViewState('category')}
+                      style={{ width: '100%', fontSize: '15px' }}
+                    >
+                      Explorar Sabores e Criar Lista de Desejos <ChevronRight size={20} />
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
