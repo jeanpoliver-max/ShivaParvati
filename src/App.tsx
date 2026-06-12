@@ -757,7 +757,7 @@ export default function App() {
           <div className="contact-info">
             <h4>Informações de Contato</h4>
             <p><strong>WhatsApp / Celular:</strong> (16) 99709-0967</p>
-            <p><strong>E-mail:</strong> contato@shivaparvati.com.br</p>
+            <p><strong>E-mail:</strong> shivaparvati.contato@gmail.com</p>
             <p><strong>Endereço:</strong> R Donizete Miola, 623 - Distrito Industrial Ercidio Borgonovi<br />Fernando Prestes, SP - CEP 15.940-000</p>
           </div>
         </div>

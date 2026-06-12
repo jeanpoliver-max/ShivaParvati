@@ -37,7 +37,7 @@ export default function TermsPage({ onBack }: { onBack: () => void }) {
             <p style={{ marginBottom: '16px' }}>Todo o conteúdo deste site, incluindo logotipos, textos, imagens e design, é de propriedade exclusiva da Shiva Parvati e é protegido pelas leis de direitos autorais.</p>
 
             <h3 style={{ marginTop: '20px', color: '#D4AF37' }}>7. Contato</h3>
-            <p style={{ marginBottom: '16px' }}>Para dúvidas, sugestões ou reclamações sobre estes Termos & Condições, entre em contato conosco através do e-mail contato@shivaparvati.com.br ou pelo WhatsApp (16) 99709-0967.</p>
+            <p style={{ marginBottom: '16px' }}>Para dúvidas, sugestões ou reclamações sobre estes Termos & Condições, entre em contato conosco através do e-mail shivaparvati.contato@gmail.com ou pelo WhatsApp (16) 99709-0967.</p>
           </div>
         </div>
       </div>

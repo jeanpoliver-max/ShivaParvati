@@ -43,7 +43,7 @@ export default function PrivacyPage({ onBack }: { onBack: () => void }) {
             <p style={{ marginBottom: '16px' }}>Esta Política de Privacidade pode ser atualizada periodicamente. Recomendamos que você revise esta página regularmente para estar ciente de quaisquer modificações.</p>
 
             <h3 style={{ marginTop: '20px', color: '#D4AF37' }}>9. Contato</h3>
-            <p style={{ marginBottom: '16px' }}>Se você tiver dúvidas sobre esta Política de Privacidade, entre em contato conosco pelo e-mail contato@shivaparvati.com.br ou através do nosso telefone/WhatsApp.</p>
+            <p style={{ marginBottom: '16px' }}>Se você tiver dúvidas sobre esta Política de Privacidade, entre em contato conosco pelo e-mail shivaparvati.contato@gmail.com ou através do nosso telefone/WhatsApp.</p>
           </div>
         </div>
       </div>
